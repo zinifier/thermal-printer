@@ -1,4 +1,3 @@
-use cosmic::iced_winit::graphics::core::{Radians, Rotation};
 use cosmic::{
     Element,
     app::{Core, Message, Settings, Task},
@@ -6,6 +5,7 @@ use cosmic::{
 };
 use iced::{Alignment, Color, Length, Subscription, keyboard};
 use rfd::FileDialog;
+use sticker_printer::{FileType, Rotation, Sticker};
 
 use std::boxed::Box;
 use std::path::{Path, PathBuf};
@@ -16,22 +16,17 @@ use icons::*;
 #[derive(Debug, Clone)]
 pub enum Action {
     SelectImage,
+    EnablePreview(bool),
     LoadImage(PathBuf),
     LoadedImage(Result<Vec<u8>, String>),
-    Rotate(Direction),
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum Direction {
-    Left,
-    Right,
+    Rotate(Rotation),
 }
 
 #[derive(Debug, Clone)]
 pub enum Image {
     None,
     Loading { path: PathBuf },
-    Loaded { path: PathBuf, data: Vec<u8> },
+    Loaded { path: PathBuf, data: Vec<u8>, sticker: Sticker },
     Errored { path: PathBuf, error: String },
 }
 
@@ -49,13 +44,26 @@ impl Image {
     pub fn loaded(&mut self, res: Result<Vec<u8>, String>) {
         *self = match self {
             Self::Loading { path } => match res {
-                Ok(data) => Self::Loaded {
-                    path: path.to_path_buf(),
-                    data,
+                Ok(data) => match FileType::from_ext(&path) {
+                    Ok(filetype) => match Sticker::from_bytes(data.clone(), filetype) {
+                        Ok(sticker) => Self::Loaded {
+                            path: path.to_path_buf(),
+                            data,
+                            sticker,
+                        },
+                        Err(error) => Self::Errored {
+                            path: path.to_path_buf(),
+                            error: error.to_string(),
+                        },
+                    },
+                    Err(error) => Self::Errored {
+                        path: path.to_path_buf(),
+                        error: error.to_string(),
+                    },
                 },
                 Err(error) => Self::Errored {
                     path: path.to_path_buf(),
-                    error,
+                    error: error.to_string(),
                 },
             },
             _ => {
@@ -63,13 +71,42 @@ impl Image {
             }
         }
     }
+
+    pub fn rotate(&mut self, direction: Rotation) {
+        match self {
+            &mut Self::Loaded { path: _, data: _, ref mut sticker } => sticker.rotate(direction),
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn to_widget(&self, preview: bool) -> widget::Image {
+        use iced::widget::image::Handle;
+        use sticker_printer::image::codecs::png::PngEncoder;
+        use std::io::BufWriter;
+
+        let mut buffer = BufWriter::new(Vec::<u8>::new());
+        let encoder = PngEncoder::new(&mut buffer);
+        match self {
+            Self::Loaded { path: _, data: _, sticker } => {
+                if preview {
+                    sticker.transformed.write_with_encoder(encoder).unwrap();
+                } else {
+                    sticker.raw.write_with_encoder(encoder).unwrap();
+                }
+            }
+            _ => unreachable!(),
+        };
+
+        let handle = Handle::from_bytes(buffer.into_inner().unwrap());
+        widget::image(handle)
+    }
 }
 
 #[derive(Clone)]
 pub struct StickerPrinter {
     core: Core,
     image: Image,
-    rotation: Rotation,
+    preview: bool,
 }
 
 impl cosmic::Application for StickerPrinter {
@@ -98,7 +135,7 @@ impl cosmic::Application for StickerPrinter {
         let app = Self {
             core,
             image: Image::None,
-            rotation: Rotation::Solid(Radians(0.0)),
+            preview: true,
         };
 
         (app, Task::none())
@@ -127,11 +164,10 @@ impl cosmic::Application for StickerPrinter {
                 self.image.loaded(res);
             }
             Action::Rotate(direction) => {
-                let angle = match direction {
-                    Direction::Left => Radians::PI / -2.0,
-                    Direction::Right => Radians::PI / 2.0,
-                };
-                self.rotation = Rotation::Solid(self.rotation.radians() + angle);
+                self.image.rotate(direction);
+            }
+            Action::EnablePreview(yes) => {
+                self.preview = yes;
             }
         }
 
@@ -158,7 +194,7 @@ impl cosmic::Application for StickerPrinter {
             Image::Loading { path: _ } => {
                 // TODO: loading spinner
             }
-            Image::Loaded { path, data } => {
+            Image::Loaded { path, data: _, sticker: _ } => {
                 content = content
                     .push(widget::button::text("Load new image").on_press(Action::SelectImage))
                     .push(widget::text(format!("{}", path.display())))
@@ -166,17 +202,16 @@ impl cosmic::Application for StickerPrinter {
                         widget::row()
                             .push(
                                 icon_button(ROTATE_LEFT, 40.0)
-                                    .on_press(Action::Rotate(Direction::Left)),
+                                    .on_press(Action::Rotate(Rotation::Left)),
                             )
                             .push(
                                 icon_button(ROTATE_RIGHT, 40.0)
-                                    .on_press(Action::Rotate(Direction::Right)),
+                                    .on_press(Action::Rotate(Rotation::Right)),
                             ),
                     )
                     .push(
                         widget::container(
-                            widget::image(iced::widget::image::Handle::from_bytes(data.clone()))
-                                .rotation(self.rotation),
+                            self.image.to_widget(self.preview)
                         )
                         .width(Length::Fixed(720.0))
                         .align_x(Alignment::Center)
@@ -204,8 +239,8 @@ impl cosmic::Application for StickerPrinter {
             };
 
             match (key, modifiers.is_empty()) {
-                (key::Named::ArrowLeft, true) => Some(Action::Rotate(Direction::Left)),
-                (key::Named::ArrowRight, true) => Some(Action::Rotate(Direction::Right)),
+                (key::Named::ArrowLeft, true) => Some(Action::Rotate(Rotation::Left)),
+                (key::Named::ArrowRight, true) => Some(Action::Rotate(Rotation::Right)),
                 _ => None,
             }
         })
