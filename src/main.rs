@@ -5,7 +5,7 @@ use cosmic::{
 };
 use iced::{Alignment, Color, Length, Subscription, keyboard};
 use rfd::FileDialog;
-use sticker_printer::{FileType, Rotation, Sticker};
+use sticker_printer::{FileType, Rotation, Sticker, print};
 
 use std::boxed::Box;
 use std::path::{Path, PathBuf};
@@ -20,6 +20,7 @@ pub enum Action {
     LoadImage(PathBuf),
     LoadedImage(Result<Vec<u8>, String>),
     Rotate(Rotation),
+    PrintSticker(u8),
 }
 
 #[derive(Debug, Clone)]
@@ -105,6 +106,13 @@ impl Image {
         let handle = Handle::from_bytes(buffer.into_inner().unwrap());
         widget::image(handle)
     }
+
+    pub fn sticker(&self) -> &Sticker {
+        match self {
+            Self::Loaded { path: _, data: _, sticker } => sticker,
+            _ => unreachable!()
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -174,6 +182,19 @@ impl cosmic::Application for StickerPrinter {
             Action::TogglePreview => {
                 self.preview = !self.preview;
             }
+            Action::PrintSticker(mut n) => {
+                let mut lp = std::fs::File::options()
+                    .write(true)
+                    .append(true)
+                    // TODO: configure printer + handle error
+                    .open("/dev/usb/lp0").unwrap();
+
+                while n > 0 {
+                    n = n - 1;
+                    // TODO: error
+                    print(&mut lp, self.image.sticker()).unwrap()
+                }
+            }
         }
 
         Task::none()
@@ -219,6 +240,9 @@ impl cosmic::Application for StickerPrinter {
                             "Enable greyscale preview",
                             self.preview
                         ).on_toggle(|_| Action::TogglePreview)
+                    )
+                    .push(
+                        widget::button::text("PRINT").on_press(Action::PrintSticker(1))
                     )
                     .push(
                         widget::container(
