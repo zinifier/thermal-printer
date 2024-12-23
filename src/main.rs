@@ -119,7 +119,7 @@ impl cosmic::Application for StickerPrinter {
             Action::LoadImage(path) => {
                 self.image.loading(&path);
                 return Task::perform(
-                    async { std::fs::read(path).map_err(|e| e.to_string()) },
+                    async { tokio::fs::read(path).await.map_err(|e| e.to_string()) },
                     |res| Message::App(Action::LoadedImage(res)),
                 );
             }

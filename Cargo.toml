@@ -7,4 +7,5 @@ edition = "2024"
 libcosmic = { git = "https://github.com/pop-os/libcosmic", features = [ "winit", "debug", "tokio" ] }
 rfd = { version = "0.15.1", default-features = false, features = [ "tokio", "xdg-portal" ] }
 sticker-printer = { path = "vendor/sticker-printer" }
+tokio = { version = "1.42.0", features = ["fs"] }
 tracing-subscriber = "0.3.19"
