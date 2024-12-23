@@ -3,7 +3,7 @@ use cosmic::{
     executor, iced, widget, Element,
 };
 use cosmic::iced_winit::graphics::core::{Radians, Rotation};
-use iced::{Alignment, Color, Length};
+use iced::{Alignment, Color, Length, Subscription, keyboard};
 use rfd::FileDialog;
 
 use std::boxed::Box;
@@ -203,6 +203,28 @@ impl cosmic::Application for StickerPrinter {
 
 
         Element::from(centered)
+    }
+
+    fn subscription(&self) -> Subscription<Action> {
+        use keyboard::key;
+
+        keyboard::on_key_press(|key, modifiers| {
+            let keyboard::Key::Named(key) = key else {
+                return None;
+            };
+
+            match (key, modifiers.is_empty()) {
+                (key::Named::ArrowLeft, true) => {
+                    Some(Action::Rotate(Direction::Left))
+                },
+                (key::Named::ArrowRight, true) => {
+                    Some(Action::Rotate(Direction::Right))
+                },
+                _ => {
+                    None
+                }
+            }
+        })
     }
 }
 
