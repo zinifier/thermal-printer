@@ -46,10 +46,15 @@ impl Image {
             Self::Loading { path } => match res {
                 Ok(data) => match FileType::from_ext(&path) {
                     Ok(filetype) => match Sticker::from_bytes(data.clone(), filetype) {
-                        Ok(sticker) => Self::Loaded {
-                            path: path.to_path_buf(),
-                            data,
-                            sticker,
+                        Ok(mut sticker) => {
+                            // Apply initial operations here
+                            sticker.dither();
+
+                            Self::Loaded {
+                                path: path.to_path_buf(),
+                                data,
+                                sticker,
+                            }
                         },
                         Err(error) => Self::Errored {
                             path: path.to_path_buf(),
