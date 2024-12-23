@@ -16,7 +16,7 @@ use icons::*;
 #[derive(Debug, Clone)]
 pub enum Action {
     SelectImage,
-    EnablePreview(bool),
+    TogglePreview,
     LoadImage(PathBuf),
     LoadedImage(Result<Vec<u8>, String>),
     Rotate(Rotation),
@@ -166,8 +166,8 @@ impl cosmic::Application for StickerPrinter {
             Action::Rotate(direction) => {
                 self.image.rotate(direction);
             }
-            Action::EnablePreview(yes) => {
-                self.preview = yes;
+            Action::TogglePreview => {
+                self.preview = !self.preview;
             }
         }
 
@@ -208,6 +208,12 @@ impl cosmic::Application for StickerPrinter {
                                 icon_button(ROTATE_RIGHT, 40.0)
                                     .on_press(Action::Rotate(Rotation::Right)),
                             ),
+                    )
+                    .push(
+                        widget::checkbox(
+                            "Enable greyscale preview",
+                            self.preview
+                        ).on_toggle(|_| Action::TogglePreview)
                     )
                     .push(
                         widget::container(
