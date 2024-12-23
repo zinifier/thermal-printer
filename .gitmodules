@@ -1,0 +1,6 @@
+[submodule "vendor/MaterialDesign"]
+	path = vendor/MaterialDesign
+	url = https://github.com/Templarian/MaterialDesign
+[submodule "vendor/sticker-printer"]
+	path = vendor/sticker-printer
+	url = https://git.linkmauve.fr/sticker-printer.git

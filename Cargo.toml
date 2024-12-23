@@ -1,0 +1,10 @@
+[package]
+name = "sticker-printer-gui"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+libcosmic = { git = "https://github.com/pop-os/libcosmic", features = [ "winit", "debug", "tokio" ] }
+rfd = { version = "0.15.1", default-features = false, features = [ "tokio", "xdg-portal" ] }
+sticker-printer = { path = "vendor/sticker-printer" }
+tracing-subscriber = "0.3.19"
