@@ -12,6 +12,8 @@ use std::path::{Path, PathBuf};
 
 pub mod icons;
 use icons::*;
+pub mod windows;
+use windows::*;
 
 #[derive(Debug, Clone)]
 pub enum Action {
@@ -204,8 +206,7 @@ impl cosmic::Application for StickerPrinter {
 
         match &self.image {
             Image::None => {
-                content =
-                    content.push(widget::button::text("Load image").on_press(Action::SelectImage));
+                return window_welcome();
             }
             Image::Errored { path, error } => {
                 content = content.push(widget::text(format!(

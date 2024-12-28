@@ -8,6 +8,7 @@ use cosmic::widget::{
 
 pub const ROTATE_LEFT: &[u8] = include_bytes!("../vendor/MaterialDesign/svg/rotate-left.svg");
 pub const ROTATE_RIGHT: &[u8] = include_bytes!("../vendor/MaterialDesign/svg/rotate-right.svg");
+pub const IMAGE_AREA: &[u8] = include_bytes!("../vendor/MaterialDesign/svg/image-area.svg");
 
 pub fn icon<'a, Theme: Catalog>(b: &[u8]) -> Svg<'a, Theme> {
     svg(Handle::from_memory(b.to_owned()))
