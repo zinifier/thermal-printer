@@ -28,9 +28,18 @@ pub enum Action {
 #[derive(Debug, Clone)]
 pub enum Image {
     None,
-    Loading { path: PathBuf },
-    Loaded { path: PathBuf, data: Vec<u8>, sticker: Sticker },
-    Errored { path: PathBuf, error: String },
+    Loading {
+        path: PathBuf,
+    },
+    Loaded {
+        path: PathBuf,
+        data: Vec<u8>,
+        sticker: Sticker,
+    },
+    Errored {
+        path: PathBuf,
+        error: String,
+    },
 }
 
 impl Image {
@@ -58,7 +67,7 @@ impl Image {
                                 data,
                                 sticker,
                             }
-                        },
+                        }
                         Err(error) => Self::Errored {
                             path: path.to_path_buf(),
                             error: error.to_string(),
@@ -82,19 +91,27 @@ impl Image {
 
     pub fn rotate(&mut self, direction: Rotation) {
         match self {
-            &mut Self::Loaded { path: _, data: _, ref mut sticker } => sticker.rotate(direction),
+            &mut Self::Loaded {
+                path: _,
+                data: _,
+                ref mut sticker,
+            } => sticker.rotate(direction),
             _ => unreachable!(),
         }
     }
 
     pub fn to_widget(&self, preview: bool) -> widget::Image {
-        use sticker_printer::image::codecs::png::PngEncoder;
         use std::io::BufWriter;
+        use sticker_printer::image::codecs::png::PngEncoder;
 
         let mut buffer = BufWriter::new(Vec::<u8>::new());
         let encoder = PngEncoder::new(&mut buffer);
         match self {
-            Self::Loaded { path: _, data: _, sticker } => {
+            Self::Loaded {
+                path: _,
+                data: _,
+                sticker,
+            } => {
                 if preview {
                     sticker.transformed.write_with_encoder(encoder).unwrap();
                 } else {
@@ -110,8 +127,12 @@ impl Image {
 
     pub fn sticker(&self) -> &Sticker {
         match self {
-            Self::Loaded { path: _, data: _, sticker } => sticker,
-            _ => unreachable!()
+            Self::Loaded {
+                path: _,
+                data: _,
+                sticker,
+            } => sticker,
+            _ => unreachable!(),
         }
     }
 }
@@ -188,7 +209,8 @@ impl cosmic::Application for StickerPrinter {
                     .write(true)
                     .append(true)
                     // TODO: configure printer + handle error
-                    .open("/dev/usb/lp0").unwrap();
+                    .open("/dev/usb/lp0")
+                    .unwrap();
 
                 while n > 0 {
                     n = n - 1;
@@ -207,6 +229,8 @@ impl cosmic::Application for StickerPrinter {
         match &self.image {
             Image::None => {
                 return window_welcome();
+                // content =
+                //     content.push(widget::button::text("Load image").on_press(Action::SelectImage));
             }
             Image::Errored { path, error } => {
                 content = content.push(widget::text(format!(
@@ -220,7 +244,11 @@ impl cosmic::Application for StickerPrinter {
             Image::Loading { path: _ } => {
                 // TODO: loading spinner
             }
-            Image::Loaded { path, data: _, sticker: _ } => {
+            Image::Loaded {
+                path,
+                data: _,
+                sticker: _,
+            } => {
                 content = content
                     .push(widget::button::text("Load new image").on_press(Action::SelectImage))
                     .push(widget::text(format!("{}", path.display())))
@@ -236,22 +264,16 @@ impl cosmic::Application for StickerPrinter {
                             ),
                     )
                     .push(
-                        widget::checkbox(
-                            "Enable greyscale preview",
-                            self.preview
-                        ).on_toggle(|_| Action::TogglePreview)
+                        widget::checkbox("Enable greyscale preview", self.preview)
+                            .on_toggle(|_| Action::TogglePreview),
                     )
+                    .push(widget::button::text("PRINT").on_press(Action::PrintSticker(1)))
                     .push(
-                        widget::button::text("PRINT").on_press(Action::PrintSticker(1))
-                    )
-                    .push(
-                        widget::container(
-                            self.image.to_widget(self.preview)
-                        )
-                        .width(Length::Fixed(720.0))
-                        .align_x(Alignment::Center)
-                        .padding(5)
-                        .style(|_| Color::WHITE.into()),
+                        widget::container(self.image.to_widget(self.preview))
+                            .width(Length::Fixed(720.0))
+                            .align_x(Alignment::Center)
+                            .padding(5)
+                            .style(|_| Color::WHITE.into()),
                     );
             }
         }
@@ -266,12 +288,10 @@ impl cosmic::Application for StickerPrinter {
     }
 
     fn subscription(&self) -> Subscription<Action> {
-        Subscription::batch(
-            vec!(
-                Self::keyboard_subscription(),
-                Self::window_subscription(),
-            )
-        )
+        Subscription::batch(vec![
+            Self::keyboard_subscription(),
+            Self::window_subscription(),
+        ])
     }
 }
 
@@ -293,13 +313,13 @@ impl StickerPrinter {
     }
 
     fn window_subscription() -> Subscription<Action> {
-        use iced::{event, core::window::Event as WindowEvent};
+        use iced::{core::window::Event as WindowEvent, event};
 
         event::listen_with(|event, _, _id| {
             if let event::Event::Mouse(_) = event {
                 return None;
             }
-            
+
             if let event::Event::Window(window_event) = event {
                 match window_event {
                     // TODO: WindowEvent::FileDropped doesn't work on Wayland
