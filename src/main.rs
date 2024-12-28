@@ -86,7 +86,6 @@ impl Image {
     }
 
     pub fn to_widget(&self, preview: bool) -> widget::Image {
-        use iced::widget::image::Handle;
         use sticker_printer::image::codecs::png::PngEncoder;
         use std::io::BufWriter;
 
@@ -103,7 +102,7 @@ impl Image {
             _ => unreachable!(),
         };
 
-        let handle = Handle::from_bytes(buffer.into_inner().unwrap());
+        let handle = widget::image::Handle::from_bytes(buffer.into_inner().unwrap());
         widget::image(handle)
     }
 
@@ -266,6 +265,17 @@ impl cosmic::Application for StickerPrinter {
     }
 
     fn subscription(&self) -> Subscription<Action> {
+        Subscription::batch(
+            vec!(
+                Self::keyboard_subscription(),
+                Self::window_subscription(),
+            )
+        )
+    }
+}
+
+impl StickerPrinter {
+    fn keyboard_subscription() -> Subscription<Action> {
         use keyboard::key;
 
         keyboard::on_key_press(|key, modifiers| {
@@ -274,9 +284,29 @@ impl cosmic::Application for StickerPrinter {
             };
 
             match (key, modifiers.is_empty()) {
-                (key::Named::ArrowLeft, true) => Some(Action::Rotate(Rotation::Left)),
-                (key::Named::ArrowRight, true) => Some(Action::Rotate(Rotation::Right)),
-                _ => None,
+                (key::Named::ArrowLeft, true) => return Some(Action::Rotate(Rotation::Left)),
+                (key::Named::ArrowRight, true) => return Some(Action::Rotate(Rotation::Right)),
+                _ => return None,
+            }
+        })
+    }
+
+    fn window_subscription() -> Subscription<Action> {
+        use iced::{event, core::window::Event as WindowEvent};
+
+        event::listen_with(|event, _, _id| {
+            if let event::Event::Mouse(_) = event {
+                return None;
+            }
+            
+            if let event::Event::Window(window_event) = event {
+                match window_event {
+                    // TODO: WindowEvent::FileDropped doesn't work on Wayland
+                    WindowEvent::FileDropped(path) => Some(Action::LoadImage(path)),
+                    _ => None,
+                }
+            } else {
+                None
             }
         })
     }
