@@ -1,8 +1,12 @@
 use std::boxed::Box;
 
+const WINDOW_TITLE: &'static str = "StickerPrinter";
+
 mod backends;
 #[cfg(feature = "cosmic")]
 pub use backends::cosmic as backend;
+#[cfg(feature = "egui")]
+pub use backends::egui as backend;
 
 pub mod icons;
 mod state;
@@ -15,7 +19,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     backend::main()?;
 
     #[cfg(not(feature = "cosmic"))]
-    unimplemented!();
+    backend::main()?;
 
     Ok(())
 }

@@ -1,5 +1,6 @@
 use crate::{Action, AppState, Image, icons::*};
 
+pub mod helpers;
 mod welcome;
 use welcome::window_welcome;
 
@@ -188,11 +189,11 @@ impl cosmic::Application for AppState {
                     .push(
                         widget::row()
                             .push(
-                                icon_button(ROTATE_LEFT, 40.0)
+                                helpers::icon_button(ROTATE_LEFT, 40.0)
                                     .on_press(Action::Rotate(Rotation::Left)),
                             )
                             .push(
-                                icon_button(ROTATE_RIGHT, 40.0)
+                                helpers::icon_button(ROTATE_RIGHT, 40.0)
                                     .on_press(Action::Rotate(Rotation::Right)),
                             ),
                     )

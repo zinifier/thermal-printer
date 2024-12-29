@@ -1,6 +1,7 @@
 use cosmic::{Element, iced, widget};
 use iced::{Alignment, Length};
 
+use super::helpers;
 use crate::{Action, icons::*};
 
 pub fn window_welcome<'a>() -> Element<'a, Action> {
@@ -16,7 +17,7 @@ pub fn window_welcome<'a>() -> Element<'a, Action> {
         .padding(20)
         .spacing(20)
         .push(
-            icon(IMAGE_AREA)
+            helpers::icon(IMAGE_AREA)
                 .height(Length::Fixed(128.0))
                 .width(Length::Shrink)
                 .symbolic(true),
