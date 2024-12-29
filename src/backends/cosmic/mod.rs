@@ -1,4 +1,4 @@
-use crate::{Action, Image, StickerPrinter, icons::*};
+use crate::{Action, AppState, Image, icons::*};
 
 mod welcome;
 use welcome::window_welcome;
@@ -39,7 +39,7 @@ impl Image {
     }
 }
 
-impl StickerPrinter {
+impl AppState {
     fn keyboard_subscription() -> Subscription<Action> {
         use keyboard::key;
 
@@ -77,7 +77,7 @@ impl StickerPrinter {
     }
 }
 
-impl cosmic::Application for StickerPrinter {
+impl cosmic::Application for AppState {
     /// Default async executor to use with the app.
     type Executor = executor::Default;
 
@@ -229,6 +229,6 @@ impl cosmic::Application for StickerPrinter {
 }
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
-    cosmic::app::run::<StickerPrinter>(Settings::default(), ())?;
+    cosmic::app::run::<AppState>(Settings::default(), ())?;
     Ok(())
 }
