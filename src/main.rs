@@ -1,5 +1,6 @@
 use std::boxed::Box;
 
+const APP_ID: &'static str = "io.github.zinifier.thermalprinter";
 const WINDOW_TITLE: &'static str = "Thermal Printer";
 
 mod backends;
