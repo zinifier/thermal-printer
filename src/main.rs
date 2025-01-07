@@ -1,6 +1,6 @@
 use std::boxed::Box;
 
-const WINDOW_TITLE: &'static str = "StickerPrinter";
+const WINDOW_TITLE: &'static str = "Thermal Printer";
 
 mod backends;
 #[cfg(feature = "cosmic")]

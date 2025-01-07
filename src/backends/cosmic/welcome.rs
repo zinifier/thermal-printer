@@ -10,7 +10,7 @@ pub fn window_welcome<'a>() -> Element<'a, Action> {
         .padding(20)
         .spacing(20);
 
-    let column = column.push(widget::text::title1("Sticker Printer"));
+    let column = column.push(widget::text::title1("ThermalPrinter"));
 
     let mut row = widget::row()
         .align_y(Alignment::Center)

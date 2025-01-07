@@ -89,7 +89,7 @@ impl cosmic::Application for AppState {
     type Message = Action;
 
     /// The unique application ID to supply to the window manager.
-    const APP_ID: &'static str = "org.sticker.StickerPrinter";
+    const APP_ID: &'static str = "io.github.zinifier.thermalprinter";
 
     fn core(&self) -> &Core {
         &self.core
