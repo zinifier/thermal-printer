@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 eframe = { version = "0.30", optional = true }
-libcosmic = { git = "https://github.com/pop-os/libcosmic", features = [ "winit", "debug", "tokio" ], optional = true }
+libcosmic = { git = "https://github.com/pop-os/libcosmic", default-features = false, features = [ "winit", "debug", "tokio", "xdg-portal" ], optional = true }
 rfd = { version = "0.15.1", default-features = false, features = [ "tokio", "xdg-portal" ] }
 sticker-printer = { path = "vendor/sticker-printer" }
 tokio = { version = "1.42.0", features = ["fs"] }

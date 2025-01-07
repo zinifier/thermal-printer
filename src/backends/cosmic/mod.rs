@@ -1,11 +1,11 @@
-use crate::{Action, AppState, Image, icons::*};
+use crate::{Action, AppState, Image, icons::*, WINDOW_TITLE};
 
 pub mod helpers;
 mod welcome;
 use welcome::window_welcome;
 
 use cosmic::{
-    Element,
+    ApplicationExt, Element,
     app::{Core, Message, Settings, Task},
     executor, iced, widget,
 };
@@ -101,13 +101,14 @@ impl cosmic::Application for AppState {
 
     /// Creates the application, and optionally emits task on initialize.
     fn init(core: Core, _input: Self::Flags) -> (Self, Task<Self::Message>) {
-        let app = Self {
+        let mut app = Self {
             core,
             image: Image::None,
             preview: true,
         };
 
-        (app, Task::none())
+        let command = app.update_title();
+        (app, command)
     }
 
     fn update(&mut self, message: Action) -> Task<Self::Message> {
@@ -226,6 +227,16 @@ impl cosmic::Application for AppState {
             Self::keyboard_subscription(),
             Self::window_subscription(),
         ])
+    }
+}
+
+impl AppState
+where
+    Self: cosmic::Application,
+{
+    fn update_title(&mut self) -> Task<Action> {
+        self.set_header_title(String::from(WINDOW_TITLE));
+        self.set_window_title(String::from(WINDOW_TITLE))
     }
 }
 
